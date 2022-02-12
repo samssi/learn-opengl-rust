@@ -1,3 +1,5 @@
-fn main() {
-    println!("Hello, world!");
+mod hello_window_1;
+
+pub fn main() {
+    hello_window_1::hello();
 }

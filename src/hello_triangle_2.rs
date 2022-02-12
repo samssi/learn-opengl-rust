@@ -1,4 +1,4 @@
-use glfw::{Context, Key, Action, Window, WindowEvent, Glfw};
+use glfw::{Context, Glfw, Window, WindowEvent};
 use gl::types::*;
 
 use std::sync::mpsc::Receiver;
@@ -7,6 +7,7 @@ use std::ptr;
 use std::str;
 use std::mem;
 use std::os::raw::c_void;
+use crate::processor::process_events;
 
 // settings
 const SCREEN_WIDTH: u32 = 800;
@@ -71,20 +72,6 @@ fn render(mut window: Window, events: Receiver<(f64, WindowEvent)>, mut glfw: Gl
         glfw.poll_events();
     }
 
-}
-
-fn process_events(window: &mut glfw::Window, events: &Receiver<(f64, glfw::WindowEvent)>) {
-    for (_, event) in glfw::flush_messages(events) {
-        match event {
-            glfw::WindowEvent::FramebufferSize(width, height) => {
-                // make sure the viewport matches the new window dimensions; note that width and
-                // height will be significantly larger than specified on retina displays.
-                unsafe { gl::Viewport(0, 0, width, height) }
-            }
-            glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) => window.set_should_close(true),
-            _ => {}
-        }
-    }
 }
 
 fn compile_shader(shader: gl::types::GLuint, shader_source_code: &str) -> GLuint {

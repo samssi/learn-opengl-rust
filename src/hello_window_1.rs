@@ -32,6 +32,11 @@ pub fn hello() {
         // events
         // -----
         process_events(&mut window, &events);
+        unsafe {
+            gl::ClearColor(0.2, 0.3 , 0.3, 1.0);
+            gl::Clear(gl::COLOR_BUFFER_BIT);
+        }
+
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------

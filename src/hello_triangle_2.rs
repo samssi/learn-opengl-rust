@@ -8,15 +8,11 @@ use std::str;
 use std::mem;
 use std::os::raw::c_void;
 use crate::processor::process_events;
+use crate::verticle_objects::TRIANGLE;
 
 // settings
 const SCREEN_WIDTH: u32 = 800;
 const SCREEN_HEIGHT: u32 = 600;
-const TRIANGLE_VERTICES: [f32; 9] =
-    [-0.5, -0.5, 0.0,
-     0.5, -0.5, 0.0,
-     0.0, 0.5, 0.0
-    ];
 
 const VERTEX_SHADER_GLSL: &str = r#"
     #version 330 core
@@ -59,7 +55,7 @@ fn render(mut window: Window, events: Receiver<(f64, WindowEvent)>, mut glfw: Gl
         let fragment_shader = compile_shader(gl::CreateShader(gl::FRAGMENT_SHADER), FRAGMENT_SHADER_GLSL);
         let shader_program = link_shader(vertex_shader, fragment_shader);
 
-        (shader_program, create_vao())
+        (shader_program, create_vao(TRIANGLE))
     };
 
     while !window.should_close() {
@@ -132,7 +128,7 @@ fn link_shader(vertex_shader: GLuint, fragment_shader: GLuint) -> GLuint {
     }
 }
 
-fn create_vao() -> (GLuint) {
+fn create_vao(vertices: [f32; 9]) -> (GLuint) {
     let (mut vbo, mut vao) = (0, 0);
     unsafe {
         gl::GenVertexArrays(1, &mut vao);
@@ -144,8 +140,8 @@ fn create_vao() -> (GLuint) {
         // copy our vertices array in a buffer for OpenGL to use
         gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
         gl::BufferData(gl::ARRAY_BUFFER,
-                       (TRIANGLE_VERTICES.len() * mem::size_of::<GLfloat>()) as GLsizeiptr,
-                       &TRIANGLE_VERTICES[0] as *const f32 as *const c_void,
+                       (vertices.len() * mem::size_of::<GLfloat>()) as GLsizeiptr,
+                       &vertices[0] as *const f32 as *const c_void,
                        gl::STATIC_DRAW);
 
         // then set the vertex attributes pointers

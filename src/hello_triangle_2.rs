@@ -53,7 +53,15 @@ fn create_glfw_window(glfw: &Glfw) -> (Window, Receiver<(f64, WindowEvent)>) {
     return (window, events);
 }
 
-fn render(mut window: Window, events: Receiver<(f64, WindowEvent)>, mut glfw: Glfw, shader_program: GLuint, vao: u32) {
+fn render(mut window: Window, events: Receiver<(f64, WindowEvent)>, mut glfw: Glfw) {
+    let (shader_program, vao) = unsafe {
+        let vertex_shader = compile_shader(gl::CreateShader(gl::VERTEX_SHADER), VERTEX_SHADER_GLSL);
+        let fragment_shader = compile_shader(gl::CreateShader(gl::FRAGMENT_SHADER), FRAGMENT_SHADER_GLSL);
+        let shader_program = link_shader(vertex_shader, fragment_shader);
+
+        (shader_program, create_vao())
+    };
+
     while !window.should_close() {
         process_events(&mut window, &events);
         unsafe {
@@ -170,14 +178,5 @@ pub fn hello() {
     // gl: load all OpenGL function pointers
     gl::load_with(|symbol| window.get_proc_address(symbol) as *const _);
 
-    let (shader_program, vao) = unsafe {
-        let vertex_shader = compile_shader(gl::CreateShader(gl::VERTEX_SHADER), VERTEX_SHADER_GLSL);
-        let fragment_shader = compile_shader(gl::CreateShader(gl::FRAGMENT_SHADER), FRAGMENT_SHADER_GLSL);
-        let shader_program = link_shader(vertex_shader, fragment_shader);
-
-        let vao = create_vao();
-        (shader_program, vao)
-    };
-
-    render(window, events, glfw, shader_program, vao);
+    render(window, events, glfw);
 }

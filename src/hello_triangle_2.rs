@@ -3,16 +3,20 @@ use gl::types::*;
 
 use std::sync::mpsc::Receiver;
 use std::ffi::CString;
-use std::ptr;
+use std::{env, ptr};
 use std::str;
 use std::mem;
 use std::os::raw::c_void;
+use crate::file_reader::read_file_to_string;
 use crate::processor::process_events;
 use crate::verticle_objects::TRIANGLE;
 
 // settings
 const SCREEN_WIDTH: u32 = 800;
 const SCREEN_HEIGHT: u32 = 600;
+
+/*
+
 
 const VERTEX_SHADER_GLSL: &str = r#"
     #version 330 core
@@ -29,6 +33,7 @@ const FRAGMENT_SHADER_GLSL: &str = r#"
         FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
     }
 "#;
+ */
 
 fn glsl_as_cstring(glsl_source: &str) -> CString {
     return CString::new(glsl_source.as_bytes()).unwrap();
@@ -50,9 +55,11 @@ fn create_glfw_window(glfw: &Glfw) -> (Window, Receiver<(f64, WindowEvent)>) {
 }
 
 fn render(mut window: Window, events: Receiver<(f64, WindowEvent)>, mut glfw: Glfw) {
+    let path = env::current_dir().unwrap();
+    println!("The current directory is {}", path.display());
     let (shader_program, vao) = unsafe {
-        let vertex_shader = compile_shader(gl::CreateShader(gl::VERTEX_SHADER), VERTEX_SHADER_GLSL);
-        let fragment_shader = compile_shader(gl::CreateShader(gl::FRAGMENT_SHADER), FRAGMENT_SHADER_GLSL);
+        let vertex_shader = compile_shader(gl::CreateShader(gl::VERTEX_SHADER), &read_file_to_string(&String::from("assets/shaders/vertex/default.vert")));
+        let fragment_shader = compile_shader(gl::CreateShader(gl::FRAGMENT_SHADER), &read_file_to_string(&String::from("assets/shaders/fragment/default.frag")));
         let shader_program = link_shader(vertex_shader, fragment_shader);
 
         (shader_program, create_vao(TRIANGLE))
@@ -128,7 +135,7 @@ fn link_shader(vertex_shader: GLuint, fragment_shader: GLuint) -> GLuint {
     }
 }
 
-fn create_vao(vertices: [f32; 9]) -> (GLuint) {
+fn create_vao(vertices: [f32; 9]) -> GLuint {
     let (mut vbo, mut vao) = (0, 0);
     unsafe {
         gl::GenVertexArrays(1, &mut vao);
@@ -176,3 +183,5 @@ pub fn hello() {
 
     render(window, events, glfw);
 }
+
+// Element buffer objects

@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use glfw::Context;
 use crate::processor::process_events;
 

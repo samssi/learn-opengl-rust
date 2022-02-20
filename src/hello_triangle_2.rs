@@ -3,37 +3,18 @@ use gl::types::*;
 
 use std::sync::mpsc::Receiver;
 use std::ffi::CString;
-use std::{env, ptr};
+use std::ptr;
 use std::str;
 use std::mem;
 use std::os::raw::c_void;
-use crate::file_reader::read_file_to_string;
 use crate::processor::process_events;
+use crate::shader_loader::read_shaders_into_memory;
+use crate::state::App;
 use crate::verticle_objects::TRIANGLE;
 
 // settings
 const SCREEN_WIDTH: u32 = 800;
 const SCREEN_HEIGHT: u32 = 600;
-
-/*
-
-
-const VERTEX_SHADER_GLSL: &str = r#"
-    #version 330 core
-    layout (location = 0) in vec3 aPos;
-    void main() {
-       gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
-    }
-"#;
-
-const FRAGMENT_SHADER_GLSL: &str = r#"
-    #version 330 core
-    out vec4 FragColor;
-    void main() {
-        FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
-    }
-"#;
- */
 
 fn glsl_as_cstring(glsl_source: &str) -> CString {
     return CString::new(glsl_source.as_bytes()).unwrap();
@@ -54,12 +35,10 @@ fn create_glfw_window(glfw: &Glfw) -> (Window, Receiver<(f64, WindowEvent)>) {
     return (window, events);
 }
 
-fn render(mut window: Window, events: Receiver<(f64, WindowEvent)>, mut glfw: Glfw) {
-    let path = env::current_dir().unwrap();
-    println!("The current directory is {}", path.display());
+fn render(mut window: Window, events: Receiver<(f64, WindowEvent)>, mut glfw: Glfw, app: App) {
     let (shader_program, vao) = unsafe {
-        let vertex_shader = compile_shader(gl::CreateShader(gl::VERTEX_SHADER), &read_file_to_string(&String::from("assets/shaders/vertex/default.vert")));
-        let fragment_shader = compile_shader(gl::CreateShader(gl::FRAGMENT_SHADER), &read_file_to_string(&String::from("assets/shaders/fragment/default.frag")));
+        let vertex_shader = compile_shader(gl::CreateShader(gl::VERTEX_SHADER), app.shaders.get("default.vert").unwrap());
+        let fragment_shader = compile_shader(gl::CreateShader(gl::FRAGMENT_SHADER), app.shaders.get("default.frag").unwrap());
         let shader_program = link_shader(vertex_shader, fragment_shader);
 
         (shader_program, create_vao(TRIANGLE))
@@ -171,6 +150,9 @@ fn create_vao(vertices: [f32; 9]) -> GLuint {
 }
 
 pub fn hello() {
+    let app = App {
+        shaders: read_shaders_into_memory()
+    };
     let glfw = initialize_glfw();
     let (mut window, events) = create_glfw_window(&glfw);
 
@@ -181,7 +163,8 @@ pub fn hello() {
     // gl: load all OpenGL function pointers
     gl::load_with(|symbol| window.get_proc_address(symbol) as *const _);
 
-    render(window, events, glfw);
+    // TODO: move all to app struct
+    render(window, events, glfw, app);
 }
 
 // Element buffer objects
